@@ -7,8 +7,12 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import { customLogger } from "./middlewares/logger.js";
 import { notFound } from "./middlewares/notFound.js";
 import helmet from "helmet";
-import cors from "cors";
 import rateLimit from "express-rate-limit";
+import cors from "cors";
+import mongoSanitize from "express-mongo-sanitize";
+import xssClean from "xss-clean";
+import compression from "compression";
+import hpp from "hpp";
 import morgan from "morgan";
 import { logger } from "./utils/logger.js";
 import { swaggerDocs } from "./utils/swagger.js";
@@ -25,8 +29,12 @@ const limiter = rateLimit({
   message: "Too many requests from this IP, please try again later.",
 });
 
-app.use(helmet()); // secure headers
-app.use(cors()); // enable CORS
+app.use(helmet()); // secure http headers
+app.use(cors({ origin: process.env.CLIENT_URL || "*", credentials: true })); // enable CORS
+app.use(mongoSanitize()); // Sanitize data (NoSQL injection)
+app.use(xssClean()); // Prevent cross-site scripting (XSS)
+app.use(hpp()); // Prevent HTTP parameter pollution
+app.use(compression()); // Gzip compression for performance
 app.use(limiter); // rate limiting
 
 app.use(
