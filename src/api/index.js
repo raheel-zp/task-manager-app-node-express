@@ -9,16 +9,16 @@ import hpp from "hpp";
 import morgan from "morgan";
 import path from "path";
 
-import { logger } from "./utils/logger.js";
-import { swaggerDocs } from "./utils/swagger.js";
-import { errorHandler } from "./middlewares/errorHandler.js";
-import { notFound } from "./middlewares/notFound.js";
-import { customLogger } from "./middlewares/logger.js";
+import { logger } from "../utils/logger.js";
+import { swaggerDocs } from "../utils/swagger.js";
+import { errorHandler } from "../middlewares/errorHandler.js";
+import { notFound } from "../middlewares/notFound.js";
+import { customLogger } from "../middlewares/logger.js";
 
-import authRoutes from "./routes/authRoutes.js";
-import taskRoutes from "./routes/taskRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import uploadRoutes from "./routes/uploadRoutes.js";
+import authRoutes from "../routes/authRoutes.js";
+import taskRoutes from "../routes/taskRoutes.js";
+import userRoutes from "../routes/userRoutes.js";
+import uploadRoutes from "../routes/uploadRoutes.js";
 
 dotenv.config();
 
