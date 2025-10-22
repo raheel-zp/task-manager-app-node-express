@@ -19,7 +19,6 @@ import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
-import { connectDB } from "./config/db.js";
 
 dotenv.config();
 
