@@ -40,11 +40,7 @@ app.use("/api", limiter);
 app.use(helmet());
 
 // Enable CORS for all origins (you can restrict it later)
-const allowedOrigins = [
-  "http://localhost:5173", // your React dev frontend
-  "http://localhost:3001", // optional extra local port
-  process.env.FRONTEND_URL, // production frontend
-];
+const allowedOrigins = ["http://localhost:5173", process.env.FRONTEND_URL];
 
 app.use(
   cors({
