@@ -1,18 +1,11 @@
-# Use the official Node.js 18 image
-FROM node:18
+FROM node:18-alpine
 
-# Set working directory
 WORKDIR /app
-
-# Copy package files and install dependencies
 COPY package*.json ./
-RUN npm install --production
-
-# Copy the rest of your app
+RUN npm install
 COPY . .
 
-# Expose your app port
-EXPOSE 3000
+ENV PORT=8080
+EXPOSE 8080
 
-# Start the app
 CMD ["npm", "start"]
