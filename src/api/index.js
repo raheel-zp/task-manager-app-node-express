@@ -24,22 +24,6 @@ dotenv.config();
 
 const app = express();
 
-// Trust Vercel proxy
-app.set("trust proxy", 1);
-
-// Rate limiter
-app.use(
-  "/api",
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: "Too many requests from this IP, please try again later.",
-  })
-);
-
-// Helmet
-app.use(helmet());
-
 // ✅ Fixed CORS
 const allowedOrigins = [
   "http://localhost:5173",
@@ -64,6 +48,22 @@ const corsOptions = {
 // ✅ Apply globally and handle preflights
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
+
+// Trust Vercel proxy
+app.set("trust proxy", 1);
+
+// Rate limiter
+app.use(
+  "/api",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: "Too many requests from this IP, please try again later.",
+  })
+);
+
+// Helmet
+app.use(helmet());
 
 // Body parser
 app.use(express.json());
