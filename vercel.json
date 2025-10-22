@@ -6,10 +6,7 @@
   "routes": [
     { 
       "src": "/(.*)", 
-      "dest": "src/api/server.js", 
-      "methods": ["GET","HEAD","PUT","PATCH","POST","DELETE","OPTIONS"], 
-      "headers": {
-        "Access-Control-Allow-Origin": "*"
-    } }
+      "dest": "src/api/server.js"
+    }
   ]
 }
