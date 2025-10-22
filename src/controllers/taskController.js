@@ -1,81 +1,94 @@
-import * as taskService from "../services/taskService.js";
+import Task from "../models/Task.js";
 
-export const getTasks = async (req, res, next) => {
+export const createTask = async (req, res) => {
+  const { title, description, dueDate } = req.body;
+  const task = await Task.create({
+    user: req.user._id,
+    title,
+    description,
+    dueDate,
+  });
+  res.status(201).json(task);
+};
+
+export const getTasks = async (req, res) => {
   try {
-    const { page, limit, done, search, sortBy } = req.query;
-    const filter = {};
+    const { page = 1, limit = 5, status, search, sort } = req.query;
+    const query = { user: req.user.id };
 
-    if (done !== undefined) filter.done = done === "true";
-    if (search) filter.title = { $regex: search, $options: "i" };
+    // Filter by status
+    if (status) query.status = status;
 
-    let sort = "-createdAt";
-    if (sortBy === "oldest") sort = "createdAt";
-    if (sortBy === "title") sort = "title";
-    if (sortBy === "dueDate") sort = "dueDate";
-    if (sortBy === "status") sort = "done";
+    // Search by title or description
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
 
-    const tasks = await taskService.getTasks({
-      filter,
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 5,
-      user: req.user,
-      sort,
+    // Sorting logic
+    let sortOption = {};
+    if (sort) {
+      const [key, order] = sort.split(":");
+      sortOption[key] = order === "desc" ? -1 : 1;
+    } else {
+      sortOption.createdAt = -1; // Default: newest first
+    }
+
+    // Pagination logic
+    const total = await Task.countDocuments(query);
+    const tasks = await Task.find(query)
+      .sort(sortOption)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    res.status(200).json({
+      data: tasks,
+      pagination: {
+        total,
+        page: parseInt(page),
+        pages: Math.ceil(total / limit),
+      },
     });
-
-    res.json(tasks);
   } catch (error) {
-    next(error);
+    console.error("Error fetching tasks:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-export const createTask = async (req, res, next) => {
-  try {
-    const { title, done, dueDate } = req.body;
-    const task = await taskService.createTask(
-      { title, done, dueDate },
-      req.user
-    );
-    res.status(201).json(task);
-  } catch (error) {
-    next(error);
-  }
+export const getTaskById = async (req, res) => {
+  const task = await Task.findById(req.params.id);
+  if (!task) return res.status(404).json({ message: "Task not found" });
+  res.json(task);
 };
 
-export const updateTask = async (req, res, next) => {
-  try {
-    const updated = await taskService.updateTask(req.params.id, req.body);
-    res.json(updated);
-  } catch (err) {
-    next(err);
+export const updateTask = async (req, res) => {
+  const { title, description, status, dueDate } = req.body;
+  const task = await Task.findById(req.params.id);
+  if (!task) return res.status(404).json({ message: "Task not found" });
+
+  if (task.user.toString() !== req.user._id.toString()) {
+    return res.status(401).json({ message: "Not authorized" });
   }
+
+  task.title = title || task.title;
+  task.description = description || task.description;
+  task.status = status || task.status;
+  task.dueDate = dueDate || task.dueDate;
+
+  const updated = await task.save();
+  res.json(updated);
 };
 
-export const deleteTask = async (req, res, next) => {
-  try {
-    await taskService.deleteTask(req.params.id);
-    res.status(204).end();
-  } catch (err) {
-    next(err);
-  }
-};
+export const deleteTask = async (req, res) => {
+  const task = await Task.findById(req.params.id);
+  if (!task) return res.status(404).json({ message: "Task not found" });
 
-export const markAllDone = async (req, res, next) => {
-  try {
-    const result = await Task.updateMany(
-      { user: req.user._id, done: false },
-      { done: true }
-    );
-    res.json({ message: `${result.modifiedCount} tasks marked as done` });
-  } catch (error) {
-    next(error);
+  if (task.user.toString() !== req.user._id.toString()) {
+    return res.status(401).json({ message: "Not authorized" });
   }
-};
 
-export const clearCompleted = async (req, res, next) => {
-  try {
-    const result = await Task.deleteMany({ user: req.user._id, done: true });
-    res.json({ message: `${result.deletedCount} completed tasks removed` });
-  } catch (error) {
-    next(error);
-  }
+  await task.deleteOne();
+  res.json({ message: "Task deleted" });
 };
