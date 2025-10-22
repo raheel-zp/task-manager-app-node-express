@@ -8,7 +8,6 @@ import compression from "compression";
 import hpp from "hpp";
 import morgan from "morgan";
 import path from "path";
-import serverless from "serverless-http";
 
 import { logger } from "./utils/logger.js";
 import { swaggerDocs } from "./utils/swagger.js";
@@ -25,38 +24,43 @@ dotenv.config();
 
 const app = express();
 
-// If behind a reverse proxy (e.g., Vercel), trust proxy for rate limiter
+// Trust Vercel proxy
 app.set("trust proxy", 1);
 
 // Rate limiter
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: "Too many requests from this IP, please try again later.",
-});
-app.use("/api", limiter);
+app.use(
+  "/api",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: "Too many requests from this IP, please try again later.",
+  })
+);
 
-// Helmet for security headers
+// Helmet
 app.use(helmet());
 
-// CORS
+// ✅ Fixed CORS
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://task-manager-frontend-react-olive.vercel.app/",
+  "https://task-manager-frontend-react-olive.vercel.app", // ✅ no trailing slash
   process.env.FRONTEND_URL,
 ];
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow Postman, serverless internal calls
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error("Not allowed by CORS"));
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS"));
   },
-  allowedHeaders: ["Content-Type", "Authorization"],
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
   credentials: true,
-  optionsSuccessStatus: 200, // Important for preflight requests
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 200,
 };
+
+// ✅ Apply globally and handle preflights
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
@@ -64,7 +68,7 @@ app.options("*", cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Security middlewares
+// Security
 app.use(mongoSanitize());
 app.use(hpp());
 app.use(compression());
@@ -78,10 +82,10 @@ app.use(
 
 app.use(customLogger);
 
-// Static uploads
+// Static
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-// Swagger docs
+// Swagger
 swaggerDocs(app);
 
 // Routes
@@ -94,5 +98,5 @@ app.use("/api/users", userRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-// Export serverless handler
-export const handler = serverless(app);
+// ✅ Vercel expects a default export
+export default app;
