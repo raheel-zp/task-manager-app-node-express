@@ -1,6 +1,10 @@
+import express from "express";
 import serverless from "serverless-http";
-import app from "./index.js";
 
-console.log("✅ Vercel serverless function initialized");
+const app = express();
+
+app.get("/test", (req, res) => {
+  res.json({ ok: true });
+});
 
 export default serverless(app);
