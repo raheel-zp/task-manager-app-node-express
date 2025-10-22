@@ -89,6 +89,10 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 // Swagger
 swaggerDocs(app);
 
+app.get("/test", (req, res) => {
+  res.json({ status: "ok", origin: req.headers.origin });
+});
+
 // Routes
 app.use("/api/upload", uploadRoutes);
 app.use("/api/tasks", taskRoutes);
