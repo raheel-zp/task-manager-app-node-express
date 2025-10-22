@@ -89,6 +89,19 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 // Swagger
 swaggerDocs(app);
 
+app.use((req, res, next) => {
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "https://task-manager-frontend-react-olive.vercel.app"
+  ); // Or '*' for all origins (use with caution in production)
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Include any custom headers used
+  next();
+});
+
 app.get("/test", (req, res) => {
   res.json({ status: "ok", origin: req.headers.origin });
 });
