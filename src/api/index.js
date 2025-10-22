@@ -52,7 +52,8 @@ const corsOptions = {
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(new Error("Not allowed by CORS"));
+    console.warn("Blocked CORS request from:", origin);
+    return callback(null, false);
   },
   credentials: true,
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
