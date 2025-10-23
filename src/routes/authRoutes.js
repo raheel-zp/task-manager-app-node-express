@@ -3,6 +3,7 @@ import {
   registerUser,
   loginUser,
   getProfile,
+  refreshToken,
 } from "../controllers/authController.js";
 import { validate } from "../middlewares/validateMiddleware.js";
 import {
@@ -116,5 +117,7 @@ router.post("/login", validate(loginValidation), loginUser);
  *         description: Unauthorized or invalid token
  */
 router.get("/profile", authMiddleware, getProfile);
+
+router.post("/refresh", refreshToken);
 
 export default router;

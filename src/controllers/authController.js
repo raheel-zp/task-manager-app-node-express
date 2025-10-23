@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import { generateToken } from "../utils/generateTokens.js";
 import expressAsyncHandler from "express-async-handler";
+import { generateRefreshToken } from "../utils/generateRefreshToken.js";
 
 export const registerUser = expressAsyncHandler(async (req, res, next) => {
   try {
@@ -12,6 +13,7 @@ export const registerUser = expressAsyncHandler(async (req, res, next) => {
 
     const user = await User.create({ name, email, password, role });
     const token = generateToken(user._id, user.role);
+    const refreshToken = generateRefreshToken(user);
 
     res.status(201).json({
       message: "User registered successfully",
@@ -22,6 +24,7 @@ export const registerUser = expressAsyncHandler(async (req, res, next) => {
         role: user.role,
       },
       token,
+      refreshToken,
     });
   } catch (error) {
     next(error);
@@ -41,6 +44,7 @@ export const loginUser = expressAsyncHandler(async (req, res, next) => {
       return res.status(400).json({ error: "Invalid email or password" });
 
     const token = generateToken(user._id, user.role);
+    const refreshToken = generateRefreshToken(user);
 
     res.json({
       message: "Login successful",
@@ -51,6 +55,7 @@ export const loginUser = expressAsyncHandler(async (req, res, next) => {
         role: user.role,
       },
       token,
+      refreshToken,
     });
   } catch (error) {
     next(error);
@@ -63,5 +68,21 @@ export const getProfile = async (req, res, next) => {
     res.json(user);
   } catch (error) {
     next(error);
+  }
+};
+
+export const refreshToken = async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) return res.status(401).json({ error: "Missing token" });
+
+  const user = await User.findOne({ refreshToken });
+  if (!user) return res.status(403).json({ error: "Invalid token" });
+
+  try {
+    jwt.verify(refreshToken, process.env.REFRESH_SECRET);
+    const newAccessToken = generateToken(user._id, user.role);
+    res.json({ accessToken: newAccessToken });
+  } catch {
+    res.status(403).json({ error: "Token expired" });
   }
 };

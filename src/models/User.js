@@ -7,6 +7,10 @@ const userSchema = new mongoose.Schema(
     email: { type: String, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ["user", "admin", "manager"], default: "user" },
+    refreshToken: {
+      type: String,
+      default: null,
+    },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
