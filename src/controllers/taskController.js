@@ -13,11 +13,13 @@ export const createTask = async (req, res) => {
 
 export const getTasks = async (req, res) => {
   try {
-    const { page = 1, limit = 5, status, search, sort } = req.query;
+    const { page = 1, limit = 5, status, search, sort, priority } = req.query;
     const query = { user: req.user.id };
 
     // Filter by status
     if (status) query.status = status;
+
+    if (priority) query.priority = priority;
 
     // Search by title or description
     if (search) {
@@ -64,7 +66,7 @@ export const getTaskById = async (req, res) => {
 };
 
 export const updateTask = async (req, res) => {
-  const { title, description, status, dueDate } = req.body;
+  const { title, description, status, dueDate, priority } = req.body;
   const task = await Task.findById(req.params.id);
   if (!task) return res.status(404).json({ message: "Task not found" });
 
@@ -76,6 +78,7 @@ export const updateTask = async (req, res) => {
   task.description = description || task.description;
   task.status = status || task.status;
   task.dueDate = dueDate || task.dueDate;
+  task.priority = priority || task.priority;
 
   const updated = await task.save();
   res.json(updated);
